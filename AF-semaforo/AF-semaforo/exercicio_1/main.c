@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
 
     pthread_t ta, tb;
     
-    sem_init(&sem_a, 0, 2);
-    sem_init(&sem_b, 0, 0);
+    sem_init(&sem_a, 0, 1);
+    sem_init(&sem_b, 0, 1);
     // Cria threads
     pthread_create(&ta, NULL, thread_a, &iters);
     pthread_create(&tb, NULL, thread_b, &iters);
