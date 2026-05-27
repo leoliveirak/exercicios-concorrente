@@ -29,13 +29,15 @@ cabeceira_t ponte_cabeceira = CONTINENTE;
 pthread_mutex_t mutex_exit;
 int vehicles_passed = 0;
 
-sem_t sem;
+sem_t sem_continente;
+sem_t sem_ilha;
 // ToDo: Adicione aque quaisquer outras variávels globais necessárias.
 /* ---------------------------------------- */
 
 /* Inicializa a ponte. */
 void ponte_inicializar() {
-	sem_init(&sem, 0, veiculos_turno);	
+	sem_init(&sem_continente, 0, veiculos_turno);
+	sem_init(&sem_ilha, 0, 0); // Inicialmente, a ponte só pode ser atravessada por veículos do CONTINENTE.
 	pthread_mutex_init(&mutex_exit, NULL);
 
 	/* Imprime direção inicial da travessia. NÃO REMOVER! */
@@ -45,11 +47,11 @@ void ponte_inicializar() {
 
 /* Função executada pelo veículo para ENTRAR em uma cabeceira da ponte. */
 void ponte_entrar(veiculo_t *v) {
-	while(1) {
-		sem_wait(&sem);
-		if (v->cabeceira == ponte_cabeceira) return;
-		sem_post(&sem);
-	}		
+	if (v->cabeceira == CONTINENTE){
+		sem_wait(&sem_continente);
+	} else {
+		sem_wait(&sem_ilha);
+	}			
 }
 
 /* Função executada pelo veículo para SAIR de uma cabeceira da ponte. */
@@ -62,7 +64,13 @@ void ponte_sair(veiculo_t *v) {
 		printf("\n[PONTE] *** Novo sentido da travessia: %s -> %s. ***\n\n", cabeceiras[v->cabeceira], cabeceiras[!v->cabeceira]);
 		fflush(stdout);
 		ponte_cabeceira = !ponte_cabeceira;
-		for (int i = 0; i < veiculos_turno; i++) sem_post(&sem);
+		for (int i = 0; i < veiculos_turno; i++) {
+			if (ponte_cabeceira == CONTINENTE){
+				sem_post(&sem_continente);
+			} else {
+				sem_post(&sem_ilha);
+			}
+		}
 	}
 
 	pthread_mutex_unlock(&mutex_exit);
@@ -70,7 +78,8 @@ void ponte_sair(veiculo_t *v) {
 
 /* FINALIZA a ponte. */
 void ponte_finalizar() {
-	sem_destroy(&sem);
+	sem_destroy(&sem_continente);
+	sem_destroy(&sem_ilha);
 	pthread_mutex_destroy(&mutex_exit);
 	
 	/* Imprime fim da execução! */
