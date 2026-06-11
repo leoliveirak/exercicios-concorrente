@@ -23,16 +23,25 @@ void* caixa_func(void *arg);
 
 // Versão thread-safe da função transferir_unsafe.
 void transferir(conta_t *origem, conta_t *destino, double valor) {
-    pthread_mutex_t bigger_id = (origem->id > destino->id) ? origem->mutex : destino->mutex;
-    pthread_mutex_t smaller_id = (origem->id < destino->id) ? origem->mutex : destino->mutex;
 
-    pthread_mutex_lock(&bigger_id);
-    pthread_mutex_lock(&smaller_id);
+    if (origem->id == destino->id) {
+        // Se as contas são iguais, travar uma vez (evitar o deadlock)
+        pthread_mutex_lock(&origem->mutex);
+        transferir_unsafe(origem, destino, valor);
+        pthread_mutex_unlock(&origem->mutex);
+        return;
+    }
+
+    pthread_mutex_t *bigger_id = (origem->id > destino->id) ? &origem->mutex : &destino->mutex;
+    pthread_mutex_t *smaller_id = (origem->id < destino->id) ? &origem->mutex : &destino->mutex;
+
+    pthread_mutex_lock(bigger_id);
+    pthread_mutex_lock(smaller_id);
 
     transferir_unsafe(origem, destino, valor);
 
-    pthread_mutex_unlock(&smaller_id);
-    pthread_mutex_unlock(&bigger_id);
+    pthread_mutex_unlock(smaller_id);
+    pthread_mutex_unlock(bigger_id);
 }
 
 int main(int argc, char* argv[]) {
