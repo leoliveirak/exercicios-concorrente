@@ -32,11 +32,8 @@ int main(int argc, char** argv) {
     for (int i = 0; i < tamanho; ++i) 
         data[i] = 100000*(rand()/(double)RAND_MAX);
 
-    double start = omp_get_wtime();
     printf("sd: %g\n", standard_deviation(data, tamanho));
-    double duration = omp_get_wtime() - start;
 
-    printf("tempo: %.3f\n", duration);
     free(data);
 
     return 0;
