@@ -8,7 +8,7 @@ def produtor():
     sleep(randint(0,2))           # fica um tempo produzindo...
     item = 'item ' + str(i)
     with lock:
-      if len(buffer) == tam_buffer:
+      while len(buffer) == tam_buffer:
         print('>>> Buffer cheio. Produtor ira aguardar.')
         lugar_no_buffer.wait()    # aguarda que haja lugar no buffer
       buffer.append(item)
@@ -19,7 +19,7 @@ def consumidor():
   global buffer
   for i in range(10):
     with lock:
-      if len(buffer) == 0:
+      while len(buffer) == 0:
         print('>>> Buffer vazio. Consumidor ira aguardar.')
         item_no_buffer.wait()   # aguarda que haja um item para consumir 
       item = buffer.pop(0)
@@ -32,9 +32,18 @@ tam_buffer = 5
 lock = Lock()
 lugar_no_buffer = Condition(lock)
 item_no_buffer = Condition(lock)
-prod = Thread(target=produtor) 
-cons = Thread(target=consumidor) 
-prod.start()
-cons.start()
-prod.join()
-cons.join() 
+
+prod1 = Thread(target=produtor)
+prod2 = Thread(target=produtor) 
+cons1 = Thread(target=consumidor)
+cons2 = Thread(target=consumidor) 
+
+prod1.start()
+prod2.start()
+cons1.start()
+cons2.start()
+
+prod1.join()
+prod2.join()
+cons1.join() 
+cons2.join() 
